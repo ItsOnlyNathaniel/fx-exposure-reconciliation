@@ -4,6 +4,7 @@ import json
 import csv
 from datetime import datetime, timedelta
 from faker import Faker
+from pathlib import Path
 
 fake = Faker()
 
@@ -17,10 +18,12 @@ def generate_base_trades(n):
     for _ in range(n):
         notional = round(random.uniform(10_000,5_000_000), 2)
         trade_date = fake.date_between(start_date="-30d", end_date="today")
+        rate = round(random.uniform(0.5, 1.5), 6)
         trades.append({
             "trade_id": fake.uuid4(),
             "counterparty": random.choice(COUNTERPARTIES),
             "currency_pair": random.choice(CURRENCY_PAIRS),
+            #TODO: Generate base/quote currencies through string formatting.
             "notional": notional,
             "rate": rate,
             "settlement_date": (trade_date + timedelta(days=2)).isoformat(),
@@ -79,21 +82,24 @@ def generate_ledger_feed(base_trades: list[dict]) -> list[dict]:
 def write_csv(trades: list[dict], filepath: str) -> None:
     if not trades:
         return
-    with open(filepath, "w", newline="") as f:
+
+    BASE_PATH = Path(__file__).resolve().parent
+    with open(BASE_PATH / "bank_feed.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=trades[0].keys())
         writer.writeheader()
         writer.writerows(trades)
 
 
 def write_json(trades: list[dict], filepath: str) -> None:
-    with open(filepath, "w") as f:
+    BASE_PATH = Path(__file__).resolve().parent
+    with open(BASE_PATH / "internal_ledger.json", "w") as f:
         json.dump(trades, f, indent=2)
 
 
 if __name__ == "__main__":
     random.seed(42)  # reproducible breaks for demos
 
-    base_trades = generate_base_trades(200)
+    base_trades = generate_base_trades(800)
 
     # Bank feed — clean source of truth
     write_csv(base_trades, "data/synthetic/bank_feed.csv")
