@@ -1,16 +1,17 @@
 import pandas as pd
 from pathlib import Path
+from datetime import date, timedelta 
 
 # Read in the data relative to project root
+yesterday = date.today() - timedelta(days=1)
+
 BASE_PATH = Path(__file__).resolve().parents[2]
 DATA_PATH = BASE_PATH / "data" / "synthetic"
-
 feed_path = DATA_PATH / "bank_feed.csv"
-ledger_path = DATA_PATH / "internal_ledger.json"
+ledger_path = DATA_PATH / yesterday.strftime("internal_ledger_%Y-%m-%d.json")
 
 feed_df = pd.read_csv(feed_path)
 ledger_df = pd.read_json(ledger_path)
-
 print(feed_df.head())
 print(ledger_df.head())
 

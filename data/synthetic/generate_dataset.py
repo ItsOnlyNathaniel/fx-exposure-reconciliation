@@ -92,7 +92,8 @@ def write_csv(trades: list[dict], filepath: str) -> None:
 
 def write_json(trades: list[dict], filepath: str) -> None:
     BASE_PATH = Path(__file__).resolve().parent
-    with open(BASE_PATH / "internal_ledger.json", "w") as f:
+    file_name= datetime.now().strftime('internal_ledger_%Y-%m-%d.json')
+    with open(BASE_PATH / file_name, "w") as f:
         json.dump(trades, f, indent=2)
 
 
