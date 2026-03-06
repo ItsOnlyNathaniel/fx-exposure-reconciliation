@@ -84,7 +84,8 @@ def write_csv(trades: list[dict], filepath: str) -> None:
         return
 
     BASE_PATH = Path(__file__).resolve().parent
-    with open(BASE_PATH / "bank_feed.csv", "w", newline="") as f:
+    file_name= datetime.today().strftime('bank_feed_%Y-%m-%d.csv')
+    with open(BASE_PATH / file_name, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=trades[0].keys())
         writer.writeheader()
         writer.writerows(trades)
@@ -92,12 +93,12 @@ def write_csv(trades: list[dict], filepath: str) -> None:
 
 def write_json(trades: list[dict], filepath: str) -> None:
     BASE_PATH = Path(__file__).resolve().parent
-    file_name= datetime.now().strftime('internal_ledger_%Y-%m-%d.json')
+    file_name= datetime.today().strftime('internal_ledger_%Y-%m-%d.json')
     with open(BASE_PATH / file_name, "w") as f:
         json.dump(trades, f, indent=2)
 
 
-if __name__ == "__main__":
+def main():
     random.seed(42)  # reproducible breaks for demos
 
     base_trades = generate_base_trades(800)
@@ -111,3 +112,6 @@ if __name__ == "__main__":
 
     print(f"Generated {len(base_trades)} base trades → bank_feed.csv")
     print(f"Generated {len(ledger)} ledger trades → internal_ledger.json")
+
+if __name__ == "__main__":
+    main()
