@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Integer, String, Numeric, Boolean, Enum, DateTime, ForeignKey
+from sqlalchemy import Integer, String, Numeric, Boolean, Enum, Optional DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column
 from sqlalchemy.dialects.postgresql import JSON
 
@@ -14,8 +14,8 @@ class Trade(Base):
     settlement_date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     side: Mapped[str] = mapped_column(String, nullable=False)
     currency_pair: Mapped[str] = mapped_column(String, nullable=False)
-    base_currency: Mapped[str] = mapped_column(String(3), nullable=False)
-    quote_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    base_currency: Mapped[str] = mapped_column(String(3), nullable=True)
+    quote_currency: Mapped[str] = mapped_column(String(3), nullable=True)
     notional: Mapped[float] = mapped_column(Numeric(18, 4), nullable=False)
     rate: Mapped[float] = mapped_column(Numeric(18, 8), nullable=False)
     status: Mapped[enumerate] = mapped_column(Enum, nullable=False)
