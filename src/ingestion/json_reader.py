@@ -1,14 +1,12 @@
 import pandas as pd
-import json
 from pathlib import Path
-from datetime import date, timedelta
+from datetime import datetime
 
 # Read JSON into a Pandas dataframe
 def read_json():
-    yesterday = date.today() - timedelta(days=1)
     BASE_PATH = Path(__file__).resolve().parents[2]
     DATA_PATH = BASE_PATH / "data" / "synthetic"
-    ledger_path = DATA_PATH / yesterday.strftime("internal_ledger_%Y-%m-%d.json")
+    ledger_path = DATA_PATH / datetime.today().strftime("internal_ledger_%Y-%m-%d.json")
     df = pd.read_json(ledger_path, convert_dates=False)
 
     return df

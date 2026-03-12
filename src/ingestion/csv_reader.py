@@ -1,14 +1,12 @@
 import pandas as pd
-import numpy as np
 from pathlib import Path
-from datetime import date, timedelta
+from datetime import datetime
 
 # Read CSV into a Pandas dataframe
 def read_csv():
-    yesterday = date.today() - timedelta(days=1)
     BASE_PATH = Path(__file__).resolve().parents[2]
     DATA_PATH = BASE_PATH / "data" / "synthetic"
-    feed_path = DATA_PATH / yesterday.strftime("bank_feed_%Y-%m-%d.csv")
+    feed_path = DATA_PATH / datetime.today().strftime("bank_feed_%Y-%m-%d.csv")
     df = pd.read_csv(feed_path)
 
     return df
