@@ -10,6 +10,14 @@ fake = Faker()
 
 
 CURRENCY_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD", "GBP/EUR"]
+PAIR_RATE_RANGES = {
+    "EUR/USD": (1.04, 1.12),
+    "GBP/USD": (1.24, 1.32),
+    "USD/JPY": (145.0, 155.0),
+    "USD/CHF": (0.87, 0.93),
+    "AUD/USD": (0.60, 0.68),
+    "USD/CAD": (1.34, 1.42),
+    "GBP/EUR": (1.14, 1.22),}
 COUNTERPARTIES = ["Barclays PLC", "Deutsche Bank AG", "HSBC Holdings", "Societe Generale", "BNP Paribas"]
 STATUSES = ["OPEN", "SETTLED", "PENDING"]
 
@@ -17,20 +25,40 @@ def generate_base_trades(n):
     trades = []
     for _ in range(n):
         notional = round(random.uniform(10_000,5_000_000), 2)
-        trade_date = fake.date_between(start_date="-30d", end_date="today")
-        rate = round(random.uniform(0.5, 1.5), 6)
+        trade_date = fake.date_between(start_date="-30d", end_date="+5d")
+        settlement_date = (trade_date + timedelta(days=2))
+
+        currency_pair = random.choice(CURRENCY_PAIRS)
+        low,high = PAIR_RATE_RANGES[currency_pair]
+        rate=round(random.uniform(low,high), 6)
+        pair_compact = currency_pair.replace("/", "")
+        base_currency = pair_compact[:3]
+        quote_currency = pair_compact[3:6]
+
         trades.append({
             "trade_id": fake.uuid4(),
             "counterparty": random.choice(COUNTERPARTIES),
-            "currency_pair": random.choice(CURRENCY_PAIRS),
-            #TODO: Generate base/quote currencies through string formatting.
+            "currency_pair": currency_pair,
+            "base_currency": base_currency,
+            "quote_currency": quote_currency,
             "notional": notional,
             "rate": rate,
-            "settlement_date": (trade_date + timedelta(days=2)).isoformat(),
-            "status": random.choice(STATUSES),
+            "trade_date": trade_date.isoformat(),
+            "settlement_date": settlement_date.isoformat(),
+            "status":assign_status(settlement_date.isoformat()),
             "created_at": datetime.now().isoformat()
         })
     return trades
+
+def assign_status(settlement_date: str):
+    settlement = datetime.fromisoformat(settlement_date)
+    today = datetime.today()
+    if settlement < today:
+        return random.choice(["SETTLED", "FAILED"])
+    elif settlement == today:
+        return "PENDING"
+    else:
+        return random.choice(["OPEN", "PENDING"])
 
 def apply_notional_mismatches(trade, pct=0.05):
     if random.random() < pct:

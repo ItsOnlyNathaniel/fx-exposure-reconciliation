@@ -2,7 +2,7 @@ import datetime
 from enum import Enum as PyEnum
 from typing import Optional
 
-from sqlalchemy import Integer, String, Numeric, Boolean, Enum as SAEnum, Date, DateTime, ForeignKey
+from sqlalchemy import PrimaryKeyConstraint, Integer, String, Numeric, Boolean, Enum as SAEnum, Date, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column
 from sqlalchemy.dialects.postgresql import JSON
 
@@ -51,7 +51,7 @@ class BreachType(PyEnum):
     CRITICAL = "CRITICAL"
 
 
-class Trade(Base):
+class Trades(Base):
     __tablename__ = "trades"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     counterparty_id: Mapped[int] = mapped_column(Integer, ForeignKey("counterparty.id"))
@@ -75,10 +75,10 @@ class Counterparty(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),nullable=True)
     description: Mapped[str]
 
-class Break(Base):
+class Breaks(Base):
     __tablename__ = "break"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    reconciliation_run_id: [int] = mapped_column(Integer, ForeignKey("reconciliation_run.id"))
+    reconciliation_run_id: Mapped[int] = mapped_column(Integer, ForeignKey("reconciliation_run.id"))
     trade_id: Mapped[str] = mapped_column(Integer, ForeignKey("trade.id"))
     description: Mapped[JSON] = mapped_column(JSON)
 
@@ -88,9 +88,9 @@ class Break(Base):
     reconciled_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 class ReconciliationRun(Base):
-    __tablename = "reconciliation_run"
+    __tablename__ = "reconciliation_run"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    trade_id = Mapped[int] = mapped_column(Integer, ForeignKey("trade.id"))
+    trade_id: Mapped[int] = mapped_column(Integer, ForeignKey("trade.id"))
     run_timestamp: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
     #Possible feed_source(s) field
     status: Mapped[RunStatus] = mapped_column(SAEnum(RunStatus, name="run_status"), nullable=False)
@@ -99,8 +99,8 @@ class MarginBreaches(Base):
     __tablename__ = "margin breaches"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reconciliation_run_id: Mapped[int] = mapped_column(Integer, ForeignKey("reconciliation_run.id"))
-    counterparty_id = Mapped[int] = mapped_column(Integer, ForeignKey("counterparty.id"))
-    detected_at = Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    counterparty_id: Mapped[int] = mapped_column(Integer, ForeignKey("counterparty.id"))
+    detected_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     exposure_amount: Mapped[float] = mapped_column(Numeric(18, 4), nullable=False)
     threshold: Mapped[float] = mapped_column(Numeric(18, 4), nullable=False)
@@ -108,15 +108,19 @@ class MarginBreaches(Base):
 
 class Rates(Base):
     __tablename__ = "rates"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     base_currency: Mapped[str] = mapped_column(String(3), nullable=False)
     target_currency: Mapped[str] = mapped_column(String(3), nullable=False)
     rate: Mapped[float] = mapped_column(Numeric(18, 8), nullable=False)
     fetch_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    fetch_timestamp: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=datetime.datetime.utcnow,
+    fetch_timestamp: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),nullable=False,default=datetime.datetime.utcnow)
+    source: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="frankfurter")
+
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "fetch_date",
+            "base_currency",
+            "target_currency",
+            name="pk_fxrate_date_pair"
+        ),
     )
-    source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     
