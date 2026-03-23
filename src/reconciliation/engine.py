@@ -29,44 +29,20 @@ def reconcile_trades(feed_df:pd.DataFrame, ledger_df:pd.DataFrame):
     # Classify breaks based on mismatches
     def classify_break(row: pd.Series):
         if row["rate_mismatch"]:
-            breaks.concat({
-            'trade_id': row['trade_id'],
-            'break_type': 'rate_mismatch',
-            'severity': 'medium',
-            'reconciled': False
-        })
             return "RATE_MISMATCH"
 
         if row["notional_mismatch"]:
-            breaks.concat({
-            'trade_id': row['trade_id'],
-            'break_type': 'notional_mismatch',
-            'severity': 'medium',
-            'reconciled': False
-        })
             return "NOTIONAL_MISMATCH"
 
         if row["settlement_mismatch"]:
-            breaks.concat({
-            'trade_id': row['trade_id'],
-            'break_type': 'settlement_date_mismatch',
-            'severity': 'medium',
-            'reconciled': False
-        })
             return "TIMING_DIFFERENCE"
 
         if row["status_mismatch"]:
-            breaks.concat({
-            'trade_id': row['trade_id'],
-            'break_type': 'status_mismatch',
-            'severity': 'medium',
-            'reconciled': False
-        })
             return "STATUS_MISMATCH"
         return None
-    
+
     # Apply classification to each row
     matched_both["break_type"] = matched_both.apply(classify_break, axis=1)
     breaks: pd.DataFrame = matched_both[matched_both["break_type"].notna()].copy()
-
+    print (breaks.head())
     return breaks
