@@ -35,6 +35,6 @@ def get_session():
 
 
 def init_db():
-    from src.database.models import Trade, ReconciliationRun, Break, AuditLog
+    from src.database.models import Trade, Counterparty, ReconciliationRun, Break, MarginBreaches, Rates
     Base.metadata.create_all(bind=engine)
     logger.info("Database initialised successfully")

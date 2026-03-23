@@ -1,0 +1,27 @@
+{
+    "Barclays PLC": {
+      "limit_quote_ccy": 1000000.0,
+      "warning_threshold_pct": 80.0,
+      "base_currency": "USD"
+    },
+    "Deutsche Bank AG": {
+      "limit_quote_ccy": 500000.0,
+      "warning_threshold_pct": 75.0,
+      "base_currency": "USD"
+    },
+    "BNP Paribas": {
+      "limit_quote_ccy": 1000000.0,
+      "warning_threshold_pct": 80.0,
+      "base_currency": "USD"
+    },
+    "HSBC Holdings": {
+      "limit_quote_ccy": 1000000.0,
+      "warning_threshold_pct": 80.0,
+      "base_currency": "USD"
+    },
+    "Societe General": {
+      "limit_quote_ccy": 1000000.0,
+      "warning_threshold_pct": 80.0,
+      "base_currency": "USD"
+    }
+}
