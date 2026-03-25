@@ -83,6 +83,8 @@ def calculate_exposure_and_breaches(
         if pd.isna(row["limit_quote_ccy"]):
             return "NO_LIMIT"
         pct = row["utilisation_pct"]
+        if pct >= 120:
+            return "CRITICAL"
         if pct >= 100:
             return "BREACH"
         if pct >= row.get("warning_threshold_pct", 80):
