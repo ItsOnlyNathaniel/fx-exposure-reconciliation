@@ -1,13 +1,13 @@
 import pandas as pd
+import logging 
 
 RATE_TOLERANCE = 0.0001
 NOTIONAL_TOLERANCE = 0.01
 
+logger = logging.getLogger(__name__)
 breaks = pd.DataFrame(columns=['trade_id', 'break_type', 'severity', 'reconciled'])
 
-# Hash lookup solution - O(n + m)
-def reconcile_trades(feed_df:pd.DataFrame, ledger_df:pd.DataFrame):
-
+def reconcile_trades(feed_df:pd.DataFrame, ledger_df:pd.DataFrame):    
     # Perform an outer merge to find matches and mismatches
     matched = pd.merge(feed_df, ledger_df, on='trade_id', suffixes=("_feed", "_ledger"), how='outer', indicator=True)
     matched_both = matched[matched["_merge"] == "both"].copy()
@@ -44,5 +44,5 @@ def reconcile_trades(feed_df:pd.DataFrame, ledger_df:pd.DataFrame):
     # Apply classification to each row
     matched_both["break_type"] = matched_both.apply(classify_break, axis=1)
     breaks: pd.DataFrame = matched_both[matched_both["break_type"].notna()].copy()
-    print (breaks.head())
+    logger.info("breaks DataFrame created successfully")
     return breaks

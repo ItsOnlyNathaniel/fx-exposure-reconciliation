@@ -1,20 +1,28 @@
 import pandas as pd
 import json
+import logging
 from pathlib import Path
 from typing import Dict, Tuple
 from src.enrichment.fx_rates import get_cached_rate
 from src.database.session import SessionLocal as get_session
 
+logger = logging.getLogger(__name__)
+
 db = get_session()
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "data" / "synthetic" / "counterparty_config.json"
-with CONFIG_PATH.open("r", encoding="utf-8") as f:
-    counterparty_config = json.load(f)
 
 def main(trades:pd.DataFrame) -> pd.DataFrame:
     """
     Calculate MTM for open/pending positions and add as 'mtm_quote_ccy' column.
     Returns the input DataFrame with new column added (NaN where not applicable).
     """
+    try:
+        CONFIG_PATH = Path(__file__).resolve().parents[2] / "data" / "synthetic" / "counterparty_config.json"
+        with CONFIG_PATH.open("r", encoding="utf-8") as f:
+            counterparty_config = json.load(f)
+        return counterparty_config
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        logger.error("Error: ", exc_info=exc)
+
     open_positions = trades[trades["status"].isin(["OPEN", "PENDING"])].copy()
     open_positions["mtm_value"] = open_positions.apply(lambda row: calculate_mtm_row(row, db), axis=1)
     open_positions.apply(calculate_exposure_and_breaches)
@@ -28,6 +36,7 @@ def calculate_mtm_row(row: pd.Series, db):
     try:
         base, quote = row["currency_pair"].split("/")
     except ValueError:
+        logger.error("Invalid format")
         return None
 
     rate = get_cached_rate(db, base, quote, row["settlement_date"].date())
@@ -48,15 +57,11 @@ def calculate_mtm_row(row: pd.Series, db):
     return round(mtm, 2)
 
 
-def calculate_exposure_and_breaches(
-    trades: pd.DataFrame,
-    counterparty_limits: Dict[str, Dict],
-    db
+def calculate_exposure_and_breaches(trades: pd.DataFrame, counterparty_limits: Dict[str, Dict], db
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     1. Compute current net exposure per counterparty (in quote ccy)
-    2. Compare to configured limits
-    3. Flag breaches/warnings
+    2. Compare to configured limits and flag breaches/warnings
     Returns:
       - exposure_df: per-counterparty summary (current_exposure, limit, utilisation_pct, status)
       - breaches_df: filtered rows where status is WARNING or BREACH (for logging/alerts)
